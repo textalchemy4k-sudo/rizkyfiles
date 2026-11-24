@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "toonkit-editors", "runtimeExecutable": "node", "runtimeArgs": ["tools/editor_server.js", "5180"], "port": 5180 }
+  ]
+}

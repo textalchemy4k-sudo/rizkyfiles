@@ -1,0 +1,21 @@
+// props inspection page: frame n = view n
+import * as THREE from 'three/webgpu';
+import { buildWorld, RC, GX } from './world.js';
+import * as P from './props.js';
+const W = 1080, H = 1920;
+const renderer = new THREE.WebGPURenderer({ antialias: true }); renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true; document.body.appendChild(renderer.domElement); await renderer.init();
+const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(40, W / H, 0.02, 9000);
+const world = buildWorld(scene); world.setTime(0); world.setStripWindow(8, -6);
+const X = GX + 1.6;
+const sign = P.makeSign(); sign.position.set(X + 2, 0, -10); sign.rotation.y = -0.5; scene.add(sign);
+const put = (o, x, y, z, ry = 0) => { o.position.set(x, y, z); o.rotation.y = ry; scene.add(o); return o; };
+put(P.makeThermos(), X, 0.02, 0); put(P.makeSpill(0.5), X + 0.3, 0.005, 0.1);
+put(P.makeCone(), X + 0.8, 0, 0); put(P.makeHammer(), X + 0.2, 0.03, 0.4).rotation.z = Math.PI / 2;
+put(P.makeJerryCan(), X - 0.5, 0, 0); put(P.makeTank(), X - 1.3, 0, 0.3);
+put(P.makeToolbox(1.6), X + 0.6, 0, -1.2); put(P.makeBeacon(), X - 0.4, 0, -0.6);
+const parts = P.makeRailParts({ x0: -0.7, x1: 0.7, z0: -1, z1: 0.6, y: 0 }); put(parts, X + 3.5, 0, 0);
+const lad = put(P.makeLadder(3.6), X + 1.6, 0, -9.5, -0.5); lad.rotation.x = -0.25;
+const VIEWS = [[[X + 0.6, 0.55, 1.4], [X, 0.12, 0]], [[X + 6, 2.6, -1], [X + 2, 3.0, -10]], [[X + 1, 3.2, -14], [X + 2, 3.0, -10]], [[X + 5.5, 1.6, 2.5], [X + 3.5, 0.1, 0]], [[X + 0.2, 0.9, 1.6], [X - 0.6, 0.25, -0.3]]];
+window.renderFrame = async (f) => { const v = VIEWS[f]; camera.position.set(...v[0]); camera.lookAt(...v[1]); camera.updateProjectionMatrix(); world.placeLight(new THREE.Vector3(...v[1])); await renderer.renderAsync(scene, camera); };
+window.SCENE = { fps: 30, frames: VIEWS.length, width: W, height: H };
+await window.renderFrame(0); window.ready = true;

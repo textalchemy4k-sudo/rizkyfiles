@@ -1,0 +1,52 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Face board</title>
+<style>
+body{margin:0;background:#f4f1ea;font-family:Arial,Helvetica,sans-serif;color:#1c1826;width:2400px}
+h1{font-size:48px;margin:40px 50px 8px}.sub{margin:0 50px 10px;font-size:22px;color:#55505e;line-height:1.45}
+h2{font-size:30px;margin:34px 50px 14px;padding-top:18px;border-top:3px solid #d9d3c6}
+.g{display:grid;grid-template-columns:repeat(6,1fr);gap:20px;padding:0 50px}
+.c{background:#fff;border-radius:16px;box-shadow:0 2px 6px rgba(0,0,0,.08);padding:10px 10px 16px;text-align:center}
+.c canvas{width:100%;display:block}.n{font-weight:bold;font-size:24px;margin-top:4px}.e{font-family:Consolas,monospace;font-size:15px;color:#6b6574;margin-top:6px;min-height:18px}
+.rules{margin:36px 50px 50px;font-size:22px;line-height:1.6}.rules li{margin:4px 0}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.webgpu.js","three/webgpu":"./vendor/three.webgpu.js","three/tsl":"./vendor/three.tsl.js"}}</script>
+</head><body>
+<h1>Face and expression board</h1>
+<div class="sub">Every face is drawn by <b>src/face2d.js</b> from emotion values (0 to 1), not from presets. Each card shows the
+emotion mix that makes it. Mix them freely: the face reads in between.</div>
+<div id="root"></div>
+<ul class="rules">
+<li><b>Both eyes are always the same type</b> (dots, rings, lids, chevrons or arcs). An eye type never fades: it switches, hidden inside a blink.</li>
+<li><b>Brows lead, the mouth comes last</b>: the brows move first, the eyes switch in a blink, and the mouth snaps into place after.</li>
+<li>The head gives a small jolt or bounce on every change, then holds still. Blinks every 2 to 5 s while calm.</li>
+<li>Faces stay white in every light (un-tone-mapped card). A back view shows no face.</li>
+<li>Talking: <code>life.talk</code> opens the mouth on the voice. Uneven brows (<code>doubt</code>) give the most life to a calm face.</li>
+</ul>
+<script type="module">
+import { features, draw, sweat } from './src/face2d.js';
+import { headBase } from './src/refface.js';
+const S = [
+  ['The basic emotions', [
+    ['neutral', {}], ['happy', { joy: 0.55 }, { talk: 0.5 }], ['big laugh', { joy: 1 }], ['surprise', { surprise: 0.9 }], ['fear', { fear: 0.9 }], ['anger', { anger: 0.9 }],
+    ['sad', { sad: 0.9 }], ['doubt', { doubt: 0.9 }], ['tired', { tired: 0.9 }], ['effort', { effort: 0.5 }], ['strain', { effort: 0.95 }], ['blowing', { blow: 0.9 }] ]],
+  ['Blends (what the shorts really use)', [
+    ['shock', { surprise: 0.9, fear: 0.6 }], ['panic', { fear: 1, surprise: 0.5 }], ['smug', { joy: 0.35, doubt: 0.6 }], ['worried', { sad: 0.4, fear: 0.4 }],
+    ['annoyed', { anger: 0.45, doubt: 0.4 }], ['relief', { joy: 0.4, tired: 0.45 }], ['proud grin', { joy: 0.7, effort: 0.3 }], ['furious', { anger: 1, effort: 0.6 }],
+    ['asleep', { tired: 1 }, { blink: 1 }], ['skeptical', { doubt: 0.6, anger: 0.2 }], ['nervous', { fear: 0.4, doubt: 0.3 }], ['grumpy', { sad: 0.3, anger: 0.35 }] ]],
+  ['Eye types and life', [
+    ['dot eyes', {}], ['ring eyes', { surprise: 0.6 }], ['lid eyes', { tired: 0.6 }], ['chevrons', { effort: 0.95 }], ['laugh arcs', { joy: 1 }], ['blink', {}, { blink: 1 }],
+    ['look left', {}, {}, { x: -0.6, y: 0 }], ['look up', { surprise: 0.3 }, {}, { x: 0.2, y: -0.6 }], ['talking', { joy: 0.2 }, { talk: 1 }], ['talking, worried', { fear: 0.3, sad: 0.3 }, { talk: 1 }],
+    ['brow raise', { doubt: 0.5 }, { browJit: -0.05 }], ['sweat', { fear: 0.7 }] ]],
+];
+const root = document.getElementById('root'), R = 120, W = 340, H = 320;
+for (const [title, list] of S) {
+  root.insertAdjacentHTML('beforeend', `<h2>${title}</h2>`); const grid = document.createElement('div'); grid.className = 'g'; root.appendChild(grid);
+  for (const [name, E, life = {}, look = { x: 0, y: 0 }] of list) {
+    const c = document.createElement('div'); c.className = 'c'; const cv = document.createElement('canvas'); cv.width = W * 2; cv.height = H * 2; c.appendChild(cv);
+    const txt = Object.entries({ ...E, ...life }).map(([k, v]) => `${k} ${v}`).join(', ') || 'all 0';
+    c.insertAdjacentHTML('beforeend', `<div class="n">${name}</div><div class="e">${txt}</div>`); grid.appendChild(c);
+    const g = cv.getContext('2d'); g.scale(2, 2); g.translate(W / 2, H / 2 + 4); headBase(g, R); const F = features(E, life); draw(g, R, F, look, 0); sweat(g, R, F);
+  }
+}
+setTimeout(() => (window.done = true), 400);
+</script></body></html>

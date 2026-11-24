@@ -1,0 +1,91 @@
+// A hand-drawn face rig: every expression is a set of numbers, so any two expressions blend smoothly.
+// Works on a plain 2D canvas (the board) and can be painted into a character card later. See FACE_NOTES.md.
+export const INK = '#1c1826';
+const L = (a, b, k) => a + (b - a) * k;
+const E = (u) => { u = Math.min(1, Math.max(0, u)); return u * u * (3 - 2 * u); };
+// defaults: resting face. Units are head radii.
+export const BASE = { sep: 0.29, ey: -0.06, ex: 0, tilt: 0, sq: 0,
+  rx: 0.075, ry: 0.115, ring: 0, rr: 0.235, pup: 0.075, open: 1, lid: 0, lidA: 0, lookX: 0, lookY: 0, chev: 0, glow: 0, up: 0,
+  bY: -0.3, bA: 0, bArc: 0.025, bLen: 0.37, bW: 0.115, bShow: 1,
+  bYL: 0, bYR: 0, openL: 1, openR: 1,
+  mx: 0, my: 0.36, mW: 0.26, mH: 0, mC: 0, mWavy: 0, mTeeth: 0, mTop: 0, mTongue: 0, mSide: 0,
+  sweat: 0, drops: 0, steam: 0, flush: 0, blush: 0, vein: 0, red: 0, target: 0, chevW: 0.05 };
+export const X = {
+  neutral: { name: 'Neutral', },
+  soft: { name: 'Soft smile', bArc: 0.05, bY: -0.32, mC: 0.09, mW: 0.26 },
+  talk: { name: 'Talking', mH: 0.17, mW: 0.28, mC: 0.02, mTop: 1, mTongue: 1, bY: -0.33 },
+  bored: { name: 'Bored', open: 0.72, lid: 0.45, bY: -0.25, mW: 0.2 },
+  deadpan: { name: 'Deadpan stare', ring: 0.55, rr: 0.19, pup: 0.055, bY: -0.36, bW: 0.085, mW: 0.15 },
+  skeptical: { name: 'Skeptical', lid: 0.42, lidA: -0.14, bA: 0.26, bY: -0.25, mW: 0.13, mC: -0.05, mx: 0.05, lookX: 0.4 },
+  smug: { name: 'Smug', lid: 0.4, bA: 0.2, bY: -0.26, mC: 0.1, mW: 0.3, mSide: 0.12 },
+  confident: { name: 'Sly grin', lid: 0.34, bA: 0.32, bY: -0.25, mC: 0.14, mW: 0.36, mTeeth: 0, mSide: 0.06, lookX: -0.2 },
+  grumpy: { name: 'Grumpy', lid: 0.25, bA: 0.28, bY: -0.22, mC: -0.09, mW: 0.2 },
+  annoyed: { name: 'Annoyed', lid: 0.42, lidA: -0.18, bA: 0.38, bY: -0.2, bW: 0.13, mC: -0.05, mW: 0.15, mSide: 0.07 },
+  angry: { name: 'Angry', lid: 0.45, lidA: -0.26, bA: 0.5, bY: -0.17, bW: 0.14, rx: 0.07, mH: 0.17, mW: 0.32, mTeeth: 1, my: 0.39, vein: 1 },
+  yell: { name: 'Shouting', lid: 0.45, lidA: -0.26, bA: 0.52, bY: -0.17, bW: 0.14, rx: 0.07, mH: 0.2, mW: 0.32, mC: -0.05, my: 0.42, mTop: 1, mTongue: 1 },
+  rage: { name: 'Rage (flush rises)', lid: 0.45, lidA: -0.26, bA: 0.56, bY: -0.17, bW: 0.145, rx: 0.07, mH: 0.17, mW: 0.33, mTeeth: 1, my: 0.39, flush: 1, steam: 1 },
+  worried: { name: 'Worried', bA: -0.42, bY: -0.33, bArc: 0.02, ring: 0.8, rr: 0.2, pup: 0.07, mWavy: 1, mW: 0.2 },
+  nervous: { name: 'Nervous sweat', ring: 1, rr: 0.215, pup: 0.07, bA: -0.3, bY: -0.42, bW: 0.095, mC: -0.03, mW: 0.2, mSide: 0.05, lookX: 0.45, sweat: 1 },
+  caught: { name: 'Caught (forced smile)', ring: 1, rr: 0.225, pup: 0.06, bA: -0.32, bY: -0.46, bW: 0.09, mH: 0.12, mW: 0.44, mTeeth: 1, sweat: 1 },
+  surprised: { name: 'Surprised', ring: 1, rr: 0.235, pup: 0.072, bY: -0.47, bArc: 0.06, bW: 0.095, mH: 0.1, mW: 0.1, my: 0.42 },
+  shock: { name: 'Shock', ring: 1, rr: 0.24, pup: 0.06, bY: -0.52, bArc: 0.08, bW: 0.095, mH: 0.24, mW: 0.17, my: 0.46 },
+  scream: { name: 'Scream', ring: 1, rr: 0.24, pup: 0.05, bA: -0.3, bY: -0.52, bW: 0.1, mH: 0.32, mW: 0.3, mTop: 1, mTongue: 1, my: 0.44, sweat: 1, drops: 1 },
+  terror: { name: 'Terror (glowing eyes)', ring: 1, rr: 0.245, pup: 0.055, glow: 1, bA: -0.34, bY: -0.56, bW: 0.095, mH: 0.19, mW: 0.25, mTeeth: 1, my: 0.52, sweat: 1, drops: 1 },
+  fury: { name: 'Fury (red glowing eyes)', ring: 1, rr: 0.2, pup: 0.05, red: 1, lid: 0.4, lidA: -0.3, bA: 0.6, bY: -0.15, bW: 0.15, mH: 0.13, mW: 0.3, mC: -0.06, mTeeth: 1, my: 0.42, vein: 1 },
+  hypno: { name: 'Locked on (target eyes)', ring: 1, rr: 0.25, pup: 0.03, target: 1, bY: -0.48, bArc: 0.05, bW: 0.09, mH: 0.0, mW: 0.16, my: 0.4 },
+  pain: { name: 'Pain (squeezed shut)', chev: 1, chevW: 0.085, bA: 0.2, bY: -0.19, bW: 0.15, bYL: 0.03, bYR: -0.02, mH: 0.15, mW: 0.5, mC: -0.12, mTeeth: 1, sq: 0.08, drops: 1 },
+  stunned: { name: 'Stunned', ring: 1, rr: 0.15, pup: 0.022, bY: -0.36, bW: 0.085, mH: 0.03, mW: 0.05, up: 0.3 },
+  goofy: { name: 'Goofy', ring: 1, rr: 0.235, pup: 0.07, lookX: -0.3, bY: -0.46, bArc: 0.05, bW: 0.095, mH: 0.1, mW: 0.22, mC: 0.05, mTongue: 2, my: 0.39 },
+  sad: { name: 'Sad', bA: -0.46, bY: -0.28, lookY: 0.5, mC: -0.09, mW: 0.2, my: 0.40 },
+  sleepy: { name: 'Asleep', open: 0.0, bY: -0.24, mW: 0.08 },
+  browUp: { name: 'One brow up*', lid: 0.2, bYL: -0.16, bYR: 0.08, bY: -0.28, mC: 0.05, mW: 0.2, mSide: 0.07 },
+  wink: { name: 'Wink*', openL: 0, bYL: 0.05, bYR: -0.06, mC: 0.1, mW: 0.26, mSide: 0.05 },
+};
+export const pose = (k) => ({ ...BASE, ...X[k] });
+export const mix = (a, b, k) => { const o = {}; for (const n in BASE) o[n] = L(a[n], b[n], k); return o; };
+// a change the way the references do it: eyes shut through a blink, new brows arrive first and overshoot, the mouth snaps last
+export function changeFace(a, b, u, opt = {}) { const o = mix(a, b, E(u)); const ov = (x, y, k) => L(x, y, k) + (y - x) * 0.18 * Math.sin(Math.min(1, k) * Math.PI);
+  const bk = Math.min(1, u * 1.5); for (const n of ['bY', 'bA', 'bArc', 'bW']) o[n] = ov(a[n], b[n], E(bk));
+  const mk = u < 0.5 ? 0 : E((u - 0.5) / 0.3); for (const n of ['mW', 'mH', 'mC', 'mWavy', 'mTeeth', 'mTop', 'mTongue', 'mSide', 'mx', 'my']) o[n] = L(a[n], b[n], mk);
+  if (opt.blink !== false) { const sh = u < 0.18 ? u / 0.18 : u < 0.5 ? 1 : 1 - (u - 0.5) / 0.22, shut = Math.max(0, Math.min(1, sh)); const e0 = u < 0.34 ? a : b; for (const n of ['ring', 'rr', 'pup', 'lid', 'lidA', 'rx', 'ry', 'glow', 'chev']) o[n] = e0[n]; o.open = L(e0.open, 0, shut); o.up = L(e0.up, 0, shut); o.openL = L(a.openL, b.openL, E(u)); o.openR = L(a.openR, b.openR, E(u)); }
+  o.tilt = (a.tilt + (b.tilt - a.tilt) * E(u)) + Math.sin(u * Math.PI) * (opt.lean ?? 0.05); o.sq = L(a.sq, b.sq, E(u)) + Math.sin(u * Math.PI) * 0.035; return o; }
+const wob = (t, s) => 1 + 0.005 * Math.sin(t * 2 + s) + 0.004 * Math.sin(t * 3 + s * 2) + 0.002 * Math.sin(t * 5 + s * 3);
+export const HEADK = { on: 0 };
+// the imperfect head: wider than tall, a heavier jaw, an uneven hand-drawn line
+// measured geometry (tools/measure_head.py): harmonics of the outer radius about its mean, and line weight round the head in head radii
+const HK = [[2, 0.0569, -0.0116], [3, 0.0318, -0.0077], [4, -0.0006, 0.0127]];   // k=5,6 dropped: a third of the outline was hidden by a hat, so they aren't reliable
+const shapeK = (t) => { let r = 1; for (const [k, a, b] of HK) r += a * Math.cos(k * t) - b * Math.sin(k * t); return r; };
+const lineT = (t) => { const c = Math.max(0, Math.cos(t - Math.PI * 0.95)); return 0.072 + 0.062 * c * c; };
+function head(g, R, s, inner, thick) { g.beginPath(); for (let i = 0; i <= 120; i++) { const t = i / 120 * Math.PI * 2; let r; if (HEADK.on) { const R0 = inner ? R / 0.985 : R / 1.012; r = R0 * shapeK(t) - (inner ? R0 * lineT(t) : 0); } else r = R * wob(t, s) + thick * (0.82 + 0.18 * Math.sin(t * 2 + s + 0.6)) * (inner ? 0 : 1); const x = Math.cos(t) * r, y = Math.sin(t) * r * (HEADK.on ? 1 : 0.985); i ? g.lineTo(x, y) : g.moveTo(x, y); } g.closePath(); }
+function brow(g, x, y, s, p, R) { const len = p.bLen * R, A = p.bA * s, w = p.bW * R, a = p.bArc * R; const ix = x - s * len / 2, ox = x + s * len / 2, iy = y + p.bA * len / 2, oy = y - p.bA * len / 2; const mx = (ix + ox) / 2, my = (iy + oy) / 2 - a * 1.6; g.beginPath(); g.moveTo(ix, iy - w * 0.55); g.quadraticCurveTo(mx, my - w * 0.42, ox, oy - w * 0.1); g.quadraticCurveTo(ox + s * w * 0.1, oy + w * 0.05, ox, oy + w * 0.12); g.quadraticCurveTo(mx, my + w * 0.42, ix, iy + w * 0.55); g.quadraticCurveTo(ix - s * w * 0.3, iy, ix, iy - w * 0.55); g.closePath(); g.fill(); }
+function eye(g, x, y, s, p, R, op) { const rg = p.ring, rr = p.rr * R, dx = p.lookX * R * 0.1, dy = p.lookY * R * 0.07, lw = R * 0.038; g.save();
+  if (p.chev > 0.5) { g.lineWidth = R * p.chevW; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(x - s * R * -0.13, y - R * 0.09); g.lineTo(x - s * R * 0.09, y); g.lineTo(x - s * R * -0.13, y + R * 0.09); g.stroke(); g.restore(); return; }
+  if (op < 0.14 && p.up < 0.5) { g.lineWidth = R * 0.048; g.lineCap = 'round'; g.beginPath(); g.moveTo(x - R * 0.12, y + p.lidA * s * R * 0.04); g.quadraticCurveTo(x, y + R * 0.015, x + R * 0.12, y - p.lidA * s * R * 0.04); g.stroke(); g.restore(); return; }
+  if (op < 0.14) { g.lineWidth = R * 0.05; g.lineCap = 'round'; g.beginPath(); g.arc(x, y + R * 0.06, R * 0.12, 1.15 * Math.PI, 1.85 * Math.PI); g.stroke(); g.restore(); return; }
+  const cut = p.lid > 0; const cyy = y - (rg > 0.5 ? rr : p.ry * R) * (1 - p.lid * 2), hw0 = rg > 0.5 ? rr * 1.2 : R * 0.17, kk = -p.lidA * hw0 * 0.75; if (cut) { g.beginPath(); g.moveTo(x - hw0, cyy + s * kk); g.lineTo(x + hw0, cyy - s * kk); g.lineTo(x + hw0, y + R); g.lineTo(x - hw0, y + R); g.closePath(); g.clip(); }
+  if (rg > 0.02) { const r = L(p.ry * R, rr, rg), yr = r * op; if (p.red > 0.5) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, '#fff2c0'); gr.addColorStop(0.35, '#ff5a2a'); gr.addColorStop(1, '#c0101a'); g.fillStyle = gr; } else if (p.glow > 0) { const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, '#fff8d0'); gr.addColorStop(0.55, '#ffe680'); gr.addColorStop(1, '#fff4c8'); g.fillStyle = gr; } else g.fillStyle = '#fffdf6'; g.beginPath(); g.ellipse(x, y, r, yr, 0, 0, 7); g.fill(); g.lineWidth = lw * (1 + 0.4 * p.glow); g.strokeStyle = INK; g.stroke(); if (p.target > 0.5) { g.save(); g.beginPath(); g.ellipse(x, y, r, yr, 0, 0, 7); g.clip(); for (let k = 5; k >= 1; k--) { g.fillStyle = k % 2 ? '#e8332a' : '#fff6e4'; g.beginPath(); g.arc(x + dx, y + dy, r * k / 5.4, 0, 7); g.fill(); } g.restore(); g.lineWidth = lw; g.strokeStyle = INK; g.beginPath(); g.ellipse(x, y, r, yr, 0, 0, 7); g.stroke(); } g.fillStyle = INK; g.beginPath(); g.arc(x + dx * 1.4, y + dy * 1.4, p.pup * R, 0, 7); g.fill(); }
+  else { g.fillStyle = INK; g.beginPath(); g.ellipse(x + dx, y + dy, p.rx * R, p.ry * R * op, 0, 0, 7); g.fill(); }
+  g.restore(); if (cut) { const hw = hw0 * 0.92, k2 = kk * 0.92; g.lineWidth = R * 0.05; g.lineCap = 'round'; g.strokeStyle = INK; g.beginPath(); g.moveTo(x - hw, cyy + s * k2); g.lineTo(x + hw, cyy - s * k2); g.stroke(); } }
+function mouth(g, x, y, p, R, ink) { const w = p.mW * R, h = p.mH * R, c = p.mC * R; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = ink; g.fillStyle = ink;
+  if (p.mTongue > 1.5) { g.save(); const P = new Path2D(); P.moveTo(x - w / 2, y); P.quadraticCurveTo(x, y + c, x + w / 2, y - p.mSide * R); g.lineWidth = R * 0.045; g.stroke(P); g.fillStyle = '#e8606a'; g.beginPath(); g.roundRect(x - w * 0.22, y + c * 0.5, w * 0.44, h * 1.9, w * 0.2); g.fill(); g.stroke(); g.lineWidth = R * 0.022; g.beginPath(); g.moveTo(x, y + c * 0.5 + h * 0.3); g.lineTo(x, y + h * 1.4); g.stroke(); g.restore(); return; }
+  if (h < R * 0.018) { g.lineWidth = R * 0.042; g.beginPath(); if (p.mWavy > 0.3) { const n = 4, A = R * 0.045 * p.mWavy; g.moveTo(x - w / 2, y); for (let i = 1; i <= n; i++) g.quadraticCurveTo(x - w / 2 + (i - 0.5) * w / n, y + (i % 2 ? -A : A) * 1.6, x - w / 2 + i * w / n, y); } else { g.moveTo(x - w / 2, y + p.mSide * R * 0.5 - c * 0.2); g.quadraticCurveTo(x, y + c * 1.25, x + w / 2, y - p.mSide * R - c * 0.2); } g.stroke(); return; }
+  if (p.mTeeth > 0.5) { const P = new Path2D(); if (c > 0.02 * R) { P.moveTo(x - w / 2, y - h * 0.4 - c * 0.6); P.quadraticCurveTo(x, y - h * 0.2, x + w / 2, y - h * 0.4 - c * 0.6); P.quadraticCurveTo(x + w * 0.42, y + h * 0.9, x, y + h * 0.9); P.quadraticCurveTo(x - w * 0.42, y + h * 0.9, x - w / 2, y - h * 0.4 - c * 0.6); P.closePath(); } else if (c < -0.02 * R) { const cd = -c; P.moveTo(x - w / 2, y - h * 0.2 + cd * 0.6); P.quadraticCurveTo(x, y - h * 0.75 - cd * 0.6, x + w / 2, y - h * 0.2 + cd * 0.6); P.quadraticCurveTo(x + w * 0.52, y + h * 0.2 + cd * 0.6, x + w * 0.45, y + h * 0.3 + cd * 0.6); P.quadraticCurveTo(x, y + h * 0.55 - cd * 0.6, x - w * 0.45, y + h * 0.3 + cd * 0.6); P.quadraticCurveTo(x - w * 0.52, y + h * 0.2 + cd * 0.6, x - w / 2, y - h * 0.2 + cd * 0.6); P.closePath(); } else P.roundRect(x - w / 2, y - h / 2, w, h, Math.min(h, w) * 0.28); g.fillStyle = '#fffdf6'; g.fill(P); g.lineWidth = R * 0.036; g.stroke(P); g.save(); g.clip(P); g.lineWidth = R * 0.022; g.beginPath(); const ty = c > 0.02 * R ? y + h * 0.18 : y; if (c < -0.02 * R) { g.moveTo(x - w / 2, y + h * 0.05 - c * 0.6); g.quadraticCurveTo(x, y - h * 0.1 + c * 0.6, x + w / 2, y + h * 0.05 - c * 0.6); } else { g.moveTo(x - w, ty); g.lineTo(x + w, ty); } const n = Math.max(3, Math.round(w / (R * 0.075))); for (let i = 1; i < n; i++) { const tx = x - w / 2 + i * w / n; g.moveTo(tx, y - h * 1.2); g.lineTo(tx, y + h * 1.2); } g.stroke(); g.restore(); return; }
+  const P = new Path2D(); if (w < R * 0.17) P.ellipse(x, y, w / 2, h / 2, 0, 0, 7); else { const t = y - h * 0.32 - c * 0.5; P.moveTo(x - w / 2, t); P.quadraticCurveTo(x, t + c * 0.2 - h * 0.06, x + w / 2, t); P.bezierCurveTo(x + w * 0.46, y + h * 0.92, x - w * 0.46, y + h * 0.92, x - w / 2, t); P.closePath(); } g.fill(P);
+  if (w >= R * 0.17) { g.save(); g.clip(P); if (p.mTop > 0.5) { g.fillStyle = '#fffdf6'; g.fillRect(x - w, y - h, w * 2, h * 0.6 - c * 0.3); } if (p.mTongue > 0.5) { g.fillStyle = '#e0505a'; g.beginPath(); g.ellipse(x + w * 0.05, y + h * 0.62, w * 0.3, h * 0.36, 0, 0, 7); g.fill(); } g.restore(); } g.lineWidth = R * 0.03; g.stroke(P); }
+function drop(g, x, y, s, a = 0) { g.save(); g.translate(x, y); g.rotate(a); g.fillStyle = '#7ccdfa'; g.strokeStyle = INK; g.lineWidth = s * 0.16; g.beginPath(); g.moveTo(0, -s); g.quadraticCurveTo(s * 0.75, s * 0.15, 0, s * 0.55); g.quadraticCurveTo(-s * 0.75, s * 0.15, 0, -s); g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,0.8)'; g.beginPath(); g.arc(-s * 0.14, s * 0.1, s * 0.13, 0, 7); g.fill(); g.restore(); }
+function puff(g, x, y, s) { g.fillStyle = '#fbfbf6'; g.strokeStyle = INK; g.lineWidth = s * 0.14; const B = [[0, 0, 0.6], [0.55, -0.12, 0.5], [-0.5, 0.05, 0.45], [0.15, -0.5, 0.45], [-0.25, -0.42, 0.36]]; for (const [a, b, r] of B) { g.beginPath(); g.arc(x + a * s, y + b * s, r * s, 0, 7); g.stroke(); } for (const [a, b, r] of B) { g.beginPath(); g.arc(x + a * s, y + b * s, r * s - g.lineWidth * 0.1, 0, 7); g.fill(); } }
+// draw a full head with a face. p: pose numbers; o: { skin, shade, seed, t }
+export function drawFace(g, cx, cy, R, p, o = {}) { const seed = o.seed ?? 1.3, t = o.t ?? 0, skin = o.skin ?? '#fdfaf3', sh = o.shade ?? '#e4dfec'; g.save(); g.translate(cx, cy); g.rotate(p.tilt); g.scale(1 + p.sq, 1 - p.sq); g.fillStyle = INK; head(g, R * 1.012, seed, false, R * 0.075); g.fill();
+  g.save(); head(g, R * 0.985, seed, true, 0); g.clip(); g.fillStyle = skin; g.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4); const gr = g.createRadialGradient(-R * 0.32, -R * 0.42, R * 0.45, -R * 0.1, -R * 0.1, R * 1.25); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.78, 'rgba(0,0,0,0)'); gr.addColorStop(1, sh); g.fillStyle = gr; g.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4);
+  if (p.flush > 0.001) { const top = L(R * 1.05, -R * 1.05, p.flush); g.fillStyle = '#7a3ad0'; g.beginPath(); g.moveTo(-R * 1.2, R * 1.2); g.lineTo(-R * 1.2, top); for (let i = 0; i <= 16; i++) { const x = -R * 1.2 + i * R * 0.15; g.lineTo(x, top + Math.sin(i * 1.3 + t * 7) * R * 0.03); } g.lineTo(R * 1.2, R * 1.2); g.closePath(); g.fill(); const g2 = g.createRadialGradient(-R * 0.3, -R * 0.4, R * 0.2, 0, 0, R * 1.2); g2.addColorStop(0, 'rgba(180,120,255,0.3)'); g2.addColorStop(1, 'rgba(50,10,110,0.45)'); g.fillStyle = g2; g.fillRect(-R * 1.2, top, R * 2.4, R * 2.4); g.fillStyle = 'rgba(210,170,255,0.75)'; for (let i = 0; i < 7; i++) { const bx = Math.sin(i * 2.7) * R * 0.75, by = R * 0.85 - ((i * 0.37 + t * 0.5) % 1) * (R * 0.85 - top); if (by > top) { g.beginPath(); g.arc(bx, by, R * (0.018 + (i % 3) * 0.01), 0, 7); g.fill(); } } }
+  if (p.blush > 0.01) { g.fillStyle = `rgba(240,110,130,${0.42 * p.blush})`; for (const s of [-1, 1]) { g.beginPath(); g.ellipse(p.ex * R + s * R * 0.58, R * 0.24, R * 0.13, R * 0.075, 0, 0, 7); g.fill(); } } g.restore();
+  const ink = p.flush > 0.6 ? '#120a24' : INK; g.fillStyle = ink; g.strokeStyle = ink; const fx = p.ex * R; for (const s of [-1, 1]) { const op = p.open * (s < 0 ? p.openL : p.openR), x = fx + s * p.sep * (1 - 0.095 * p.ring) * R, y = (p.ey - p.up * 0) * R; eye(g, x, y, s, { ...p, up: (s < 0 ? p.openL : p.openR) < 0.5 ? 0 : p.up }, R, op); g.fillStyle = ink; g.strokeStyle = ink; if (p.bShow) brow(g, x, y + (p.bY + (s < 0 ? p.bYL : p.bYR)) * R, s, p, R); }
+  mouth(g, fx + p.mx * R, p.my * R, p, R, ink);
+  if (p.vein > 0.5) { const ax = fx + R * 0.56, ay = -R * 0.62; g.strokeStyle = '#d8323c'; g.lineWidth = R * 0.03; g.lineCap = 'round'; for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; g.beginPath(); g.moveTo(ax + Math.cos(a) * R * 0.04, ay + Math.sin(a) * R * 0.04); g.quadraticCurveTo(ax + Math.cos(a) * R * 0.14, ay + Math.sin(a) * R * 0.02, ax + Math.cos(a) * R * 0.13, ay + Math.sin(a) * R * 0.13); g.stroke(); } }
+  g.restore();
+  if (p.sweat > 0.5) drop(g, cx + R * 0.72, cy - R * 0.62, R * 0.15, 0.2); if (p.drops > 0.5) { for (const [a, d, s] of [[-2.5, 1.26, 0.09], [-0.55, 1.3, 0.1], [0.1, 1.32, 0.08], [-3.05, 1.3, 0.1], [-1.1, 1.28, 0.08]]) drop(g, cx + Math.cos(a) * R * d, cy + Math.sin(a) * R * d, R * s, a + Math.PI / 2); }
+  if (p.steam > 0.05) { const k = p.steam, S = R * 0.28 * k; puff(g, cx - R * 1.1 * L(0.8, 1, k), cy - R * 0.95, S); puff(g, cx + R * 1.1 * L(0.8, 1, k), cy - R * 0.95, S); puff(g, cx - R * 0.72, cy - R * 1.32, S * 0.7); puff(g, cx + R * 0.72, cy - R * 1.32, S * 0.7); } }
+// head outline + skin only (head frame already translated/rotated); features are drawn by face2d.js
+export function headBase(g, R, seed = 1.3, skin = '#ffffff', sh = '#eeedf4') { g.fillStyle = INK; head(g, R * 1.012, seed, false, R * 0.075); g.fill();
+  g.save(); head(g, R * 0.985, seed, true, 0); g.clip(); g.fillStyle = skin; g.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4); const gr = g.createRadialGradient(-R * 0.32, -R * 0.42, R * 0.45, -R * 0.1, -R * 0.1, R * 1.25); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.78, 'rgba(0,0,0,0)'); gr.addColorStop(1, sh); g.fillStyle = gr; g.fillRect(-R * 1.2, -R * 1.2, R * 2.4, R * 2.4); g.restore(); }
+export { drop };

@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Music picker</title>
+<style>
+:root { --bg: #15161a; --panel: #1f2127; --line: #30333b; --text: #e8e6e0; --dim: #9a9ca4; --acc: #e8b21a; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, Segoe UI, Arial, sans-serif; height: 100%; }
+.wrap { display: flex; gap: 20px; padding: 16px; box-sizing: border-box; height: 100%; }
+video { height: calc(100vh - 32px); aspect-ratio: 9 / 16; background: #000; border-radius: 8px; }
+.side { flex: 1; min-width: 260px; overflow-y: auto; }
+h2 { margin: 0 0 6px; font-size: 18px; } p { color: var(--dim); margin: 0 0 14px; font-size: 13px; }
+.opt { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 8px; background: var(--panel); cursor: pointer; }
+.opt.on { border-color: var(--acc); background: #2c2a22; }
+.num { width: 26px; height: 26px; border-radius: 50%; background: #2a2c33; display: grid; place-items: center; font-weight: 700; }
+.opt.on .num { background: var(--acc); color: #1a1a1a; }
+.row { display: flex; gap: 8px; margin: 12px 0; }
+button { background: #2a2c33; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; font: inherit; cursor: pointer; }
+button:hover { border-color: var(--acc); }
+@media (max-width: 700px) { .wrap { flex-direction: column; } video { height: 60vh; } }
+</style></head><body>
+<div class="wrap">
+  <video id="v" src="out/preview_540.mp4" muted playsinline preload="auto"></video>
+  <div class="side">
+    <h2>Background music</h2>
+    <p>Each option is the full mix (voice, sound effects and music). The music sits about as loud as in the reference short; short tracks loop. Click a track to switch; the video keeps its place. Set the music volume with the slider, then click Save as final.</p>
+    <div class="row"><button id="play">Play</button><button id="restart">From the start</button></div>
+    <div class="row" style="align-items:center"><span>Music volume</span><input id="vol" type="range" min="-15" max="12" step="1" value="0" style="flex:1"><span id="volv" style="width:70px;text-align:right"></span></div>
+    <div class="row"><button id="save" style="flex:1">Save as final</button></div>
+    <p id="saved" style="color:var(--acc)"></p>
+    <div id="list"></div>
+  </div>
+</div>
+<script>
+let NAMES = [], FILES = [];
+// voice + sound effects play from one stem, the music from another through a gain node, so the volume slider is live
+const v = document.getElementById('v'), base = new Audio('out/opts/base.m4a'), mus = new Audio(); let cur = 0, ctx = null, gain = null;
+function audioGraph() { if (ctx) return; ctx = new AudioContext(); gain = ctx.createGain(); ctx.createMediaElementSource(mus).connect(gain).connect(ctx.destination); setVol(); }
+function setVol() { const db = +document.getElementById('vol').value; document.getElementById('volv').textContent = (db > 0 ? '+' : '') + db + ' dB'; if (gain) gain.gain.value = Math.pow(10, db / 20); }
+function sync() { for (const a of [base, mus]) a.currentTime = v.currentTime; }
+function pick(i) { const playing = !v.paused; cur = i; mus.src = `out/opts/mus${i + 1}.m4a`; mus.currentTime = v.currentTime; if (playing) mus.play();
+  document.querySelectorAll('.opt').forEach((e, k) => e.classList.toggle('on', k === i)); }
+document.getElementById('play').onclick = () => { audioGraph(); ctx.resume(); if (v.paused) { sync(); v.play(); base.play(); mus.play(); document.getElementById('play').textContent = 'Pause'; } else { v.pause(); base.pause(); mus.pause(); document.getElementById('play').textContent = 'Play'; } };
+document.getElementById('restart').onclick = () => { v.currentTime = 0; sync(); };
+document.getElementById('vol').oninput = setVol;
+v.addEventListener('seeked', sync);
+setInterval(() => { if (!v.paused) for (const a of [base, mus]) if (Math.abs(a.currentTime - v.currentTime) > 0.12) a.currentTime = v.currentTime; }, 500);
+v.addEventListener('ended', () => { base.pause(); mus.pause(); document.getElementById('play').textContent = 'Play'; });
+document.getElementById('save').onclick = async () => { const db = +document.getElementById('vol').value, r = await fetch('/choose', { method: 'POST', body: JSON.stringify({ track: cur + 1, name: NAMES[cur], file: FILES[cur], db }) });
+  document.getElementById('saved').textContent = r.ok ? `Saved: track ${cur + 1}, ${db > 0 ? '+' : ''}${db} dB. Tell Claude to make the final.` : 'Save failed.'; };
+fetch('out/opts/tracks.json').then((r) => r.json()).then((T) => { NAMES = T.map((x) => x.name); FILES = T.map((x) => x.file);
+  NAMES.forEach((n, i) => { const d = document.createElement('div'); d.className = 'opt'; d.innerHTML = `<span class="num">${i + 1}</span><span>${n}</span>`; d.onclick = () => pick(i); document.getElementById('list').appendChild(d); }); setVol(); pick(0); });
+</script>
+</body></html>
