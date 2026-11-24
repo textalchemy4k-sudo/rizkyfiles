@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Camera editor</title>
+<style>
+:root { --bg: #15161a; --panel: #1f2127; --line: #30333b; --text: #e8e6e0; --dim: #9a9ca4; --acc: #e8b21a; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, Segoe UI, Arial, sans-serif; overflow: hidden; height: 100%; }
+#view { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% - 360px); display: flex; align-items: center; justify-content: center; }
+#stage { position: relative; height: 96vh; aspect-ratio: 9 / 16; }
+#stage canvas { position: absolute; left: 0; top: 0; width: 100% !important; height: 100% !important; }
+#stage.fly { outline: 2px solid var(--acc); }
+#panel { position: absolute; right: 0; top: 0; bottom: 0; width: 360px; background: var(--panel); border-left: 1px solid var(--line); padding: 14px; box-sizing: border-box; overflow-y: auto; }
+h2 { font-size: 15px; margin: 4px 0 10px; } h3 { font-size: 13px; color: var(--dim); margin: 16px 0 6px; text-transform: none; }
+select, button, input[type=number] { background: #2a2c33; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 6px 9px; font: inherit; }
+button { cursor: pointer; } button:hover { border-color: var(--acc); } button.on { background: var(--acc); color: #1a1a1a; border-color: var(--acc); }
+.row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+input[type=range] { width: 100%; }
+#keys div { display: flex; gap: 6px; align-items: center; padding: 4px 6px; border-radius: 6px; } #keys div.cur { background: #34302a; }
+#keys span { flex: 1; font-variant-numeric: tabular-nums; }
+#wave { width: 100%; height: 60px; background: #121317; border-radius: 6px; cursor: pointer; display: block; margin: 4px 0; }
+#caption { font-size: 22px; font-weight: 800; text-align: center; min-height: 30px; letter-spacing: 0.5px; }
+#words { display: flex; flex-wrap: wrap; gap: 4px; } #words button { padding: 3px 7px; font-size: 13px; } #words button.cur { background: var(--acc); color: #1a1a1a; }
+.help { color: var(--dim); font-size: 12px; } #status { color: var(--acc); min-height: 18px; font-size: 12px; }
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.webgpu.js","three/webgpu":"./vendor/three.webgpu.js","three/tsl":"./vendor/three.tsl.js"}}</script>
+</head><body>
+<div id="view"><div id="stage"></div></div>
+<div id="panel">
+  <h2>Camera editor</h2>
+  <div class="row"><select id="shot" style="flex:1"></select></div>
+  <canvas id="wave" width="660" height="120" title="Click to jump. Grey: the sound. Yellow ticks: your keys."></canvas>
+  <div id="caption"></div>
+  <div class="row"><button id="prev">&#9664;</button><input id="time" type="range" min="0" max="1" step="0.0333" style="flex:1"><button id="next">&#9654;</button></div>
+  <div class="row"><label class="help"><input id="snd" type="checkbox" checked> Sound</label><label class="help"><input id="scrubsnd" type="checkbox" checked> Hear a blip when scrubbing</label></div>
+  <h3>Words in this shot (click to jump)</h3>
+  <div id="words"></div>
+  <div class="row"><span id="tlabel" class="help"></span></div>
+  <div class="row"><button id="play">Play shot</button><button id="mode">Fly camera</button></div>
+  <div class="row"><span class="help">Zoom (fov)</span><input id="fov" type="range" min="20" max="80" step="1" style="flex:1"><span id="fovv" class="help"></span></div>
+  <h3>Keys of this shot</h3>
+  <div id="keys"></div>
+  <div class="row"><button id="setkey">Add key here</button><button id="deselect">Deselect</button><button id="reset">Reset shot</button></div>
+  <div class="row"><button id="save" style="flex:1">Save cameras</button></div>
+  <div id="status"></div>
+  <h3>How to fly</h3>
+  <div class="help">Turn on <b>Fly camera</b>, then: drag to look around the point in front of you, right-drag (or Shift+drag) to slide, wheel to move in and out. W A S D move, Q E go down and up (hold Shift for faster). <b>Add key here</b> stores the view at the current time. To change a key: click <b>Select</b> next to it (the view jumps there), move the camera, click <b>Replace selected key</b>; it keeps its time. Moving the time slider deselects. <b>Copy here</b> puts that key's view at the current time. Two keys = one smooth move; one key = a still camera. <b>Save cameras</b> writes cameras.json; the final render uses it.</div>
+</div>
+<script type="module" src="./src/editor.js"></script>
+</body></html>

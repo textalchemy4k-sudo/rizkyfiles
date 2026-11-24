@@ -1,0 +1,12 @@
+import * as THREE from 'three/webgpu';
+import { buildWorld, RC, GX, RAIL, EDGE } from './world.js';
+const W = 1080, H = 1920;
+const renderer = new THREE.WebGPURenderer({ antialias: true }); renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0; renderer.shadowMap.enabled = true; document.body.appendChild(renderer.domElement); await renderer.init();
+const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(50, W / H, 0.05, 9000);
+const world = buildWorld(scene);
+world.cutGrooves(80, 0.3, { fresh: 0 }); world.grooves.push({ z: -0.15, p: 0.6, fresh: 1 });
+world.rails[1].dents.push({ z: -60, len: 2.2, out: 0.5, drop: 0.12, twist: 0.6 }); world.rebuildRails();
+const V = [[0, [GX + 1.2, 0.8, -1.2], [GX, 0.0, 2.5], 40], [0, [RC + 2, 22, 30], [RC, 0, -120], 55], [0, [GX + 2, 1.4, -52], [RC + RAIL, 0.5, -60], 45], [1, [RC + 2, 22, 30], [RC, 0, -120], 55], [0.5, [GX + 3, 2, 8], [GX, 1, -30], 55]];
+window.renderFrame = async (f) => { const v = V[f]; world.setTime(v[0]); world.setStripWindow(8, -3); camera.position.set(...v[1]); camera.lookAt(...v[2]); camera.fov = v[3]; camera.updateProjectionMatrix(); world.placeLight(new THREE.Vector3(...v[2])); await renderer.renderAsync(scene, camera); };
+window.SCENE = { fps: 30, frames: V.length, width: W, height: H };
+await window.renderFrame(0); window.ready = true;

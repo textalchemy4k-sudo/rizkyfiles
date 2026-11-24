@@ -1,0 +1,141 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Prompt Guide</title>
+<style>
+@page { size: A4; margin: 18mm 16mm; }
+:root { --ink: #1c1b22; --dim: #5c5a66; --acc: #d4891a; --blue: #2e5fa8; --soft: #f5f1e8; --line: #e2ddd2; }
+body { font: 11pt/1.55 Arial, Helvetica, sans-serif; color: var(--ink); margin: 0; }
+h1 { font-size: 30pt; margin: 0 0 6pt; letter-spacing: -0.5pt; } h2 { font-size: 17pt; margin: 22pt 0 8pt; border-bottom: 2px solid var(--acc); padding-bottom: 4pt; page-break-after: avoid; }
+h3 { font-size: 12.5pt; margin: 14pt 0 4pt; color: var(--blue); page-break-after: avoid; }
+p { margin: 0 0 8pt; } ul, ol { margin: 0 0 8pt 16pt; padding: 0; } li { margin: 0 0 3pt; }
+.cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+.cover .sub { font-size: 14pt; color: var(--dim); max-width: 140mm; }
+.tag { display: inline-block; background: var(--acc); color: #fff; font-weight: 700; padding: 3pt 9pt; border-radius: 12pt; font-size: 9.5pt; margin-bottom: 14pt; }
+.box { background: var(--soft); border-left: 4px solid var(--acc); padding: 9pt 12pt; margin: 8pt 0 12pt; border-radius: 4pt; page-break-inside: avoid; }
+.ex { font: 9.5pt/1.5 Consolas, 'Courier New', monospace; background: #fbfaf6; border: 1px solid var(--line); padding: 9pt 11pt; border-radius: 4pt; white-space: pre-wrap; margin: 6pt 0 12pt; page-break-inside: avoid; }
+.do, .dont { padding: 7pt 11pt; border-radius: 4pt; margin: 5pt 0; page-break-inside: avoid; } .do { background: #e9f6ee; border-left: 4px solid #2f9a5c; } .dont { background: #fbeceb; border-left: 4px solid #c8413a; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 12pt; font-size: 10pt; page-break-inside: avoid; } th, td { border: 1px solid var(--line); padding: 5pt 7pt; text-align: left; vertical-align: top; } th { background: var(--soft); }
+.pb { page-break-before: always; } .small { font-size: 9.5pt; color: var(--dim); }
+</style></head><body>
+
+<section class="cover">
+  <div class="tag">SKOOL COMMUNITY · PROMPT GUIDE</div>
+  <h1>How to prompt Claude for cartoon shorts that look this good</h1>
+  <p class="sub">The exact way I write my video prompts, how I give feedback, and how I get Claude to model realistic 3D objects from code. Use it with the cartoon-shorts skill.</p>
+  <p class="small" style="margin-top:30pt">Contents: 1. The mindset · 2. What to give Claude · 3. The shot-by-shot prompt · 4. Characters · 5. World &amp; objects · 6. Camera &amp; lighting · 7. Sound · 8. Feedback that works · 9. Modelling objects with Claude · 10. Templates · 11. Checklist</p>
+</section>
+
+<h2>1. The mindset</h2>
+<p><b>AI is only as smart as the person prompting it.</b> Claude can build the whole video, but it can only build what you describe. Vague prompts give generic videos. A prompt that says what happens on <i>every line of the voice</i> gives a video that matches your idea.</p>
+<div class="box"><b>Three rules I always follow</b><ol><li>Describe the video <b>line by line</b>, tied to the exact words of the voice.</li><li>Give <b>references</b> (videos, screenshots, photos) and say exactly what to take from each.</li><li>Ask for a <b>storyboard first</b>. Never let it animate before you approve the stills.</li></ol></div>
+
+<h2>2. What to give Claude</h2>
+<table><tr><th>Input</th><th>Why</th></tr>
+<tr><td>Voice file (mp3/wav)</td><td>Claude transcribes it to word timings, so every visual lands on the right word.</td></tr>
+<tr><td>Script (txt)</td><td>Fixes words the transcription mishears, so subtitles match.</td></tr>
+<tr><td>Reference videos + timestamps</td><td>"the day aerial at 6–9 s", "the timelapse at 14 s". Claude measures colours, framing and timing from them.</td></tr>
+<tr><td>Screenshots / photos</td><td>Hair shape, character size in frame, seats, dashboards, any object you want modelled.</td></tr>
+<tr><td>Existing scenes / models</td><td>"use the road scene we made", "model it the way you did the police car". Reuse keeps quality consistent.</td></tr></table>
+
+<h2>3. The shot-by-shot prompt</h2>
+<p>This is the core. For each line of the voice, write: <b>the quote</b> → <b>what is on screen</b> → <b>what the camera does</b> → <b>the transition</b>. Quote the voice so Claude can find the time.</p>
+<div class="ex">on "He cut rough grooves into the edge of the road," our guy, one knee on the ground, is cutting the side of the road. It is day. He stands after finishing one cut, moves a little and gets down to cut another. Make sure the ground actually gets damaged, and there are existing cuts behind him.
+
+on "one after another." the camera zooms out to show how much progress he made, and his truck is parked on the side of the road.
+
+then it FADES into "where almost every night a car drifts off the road and crashes." — same angle, now night. A random car swerves and hits the guardrail; the rail bends, the car is damaged, with sfx and camera shake.</div>
+<p class="small">(Real excerpt from the prompt that made the Rumble Strips short.)</p>
+<h3>What every line should say</h3>
+<ul><li><b>Who</b> is in the shot and what they <b>do</b> (verbs: kneels, hops out, yanks the wheel, grins).</li>
+<li><b>Where</b> and <b>when</b> (day/night, which place, which earlier scene to reuse).</li>
+<li><b>Camera</b>: zoom in on X, pull out, low angle, aerial, through the side window, POV.</li>
+<li><b>Transition</b>: FADE, cut, continuous move, timelapse. Say "no transition" where you want none.</li>
+<li><b>Damage / reactions</b>: what breaks, bends, shakes, spills.</li></ul>
+<div class="do"><b>Do:</b> "on 'and the crashes kept coming.' timelapse from day to night — the worker is NOT affected by the timelapse — then the camera zooms out and a car crashes into the guardrail beside the sign, like the 14 s mark of the reference."</div>
+<div class="dont"><b>Don't:</b> "show some crashes and make it look cool."</div>
+
+<h2>4. Characters</h2>
+<ul><li>Describe each character's look: <i>"orange hard hat, hi-vis vest over a blue tee, short dark hair"</i>; <i>"neat side-part, glasses, white shirt and navy tie, lanyard badge"</i>.</li>
+<li>Say <b>new characters</b> for every story (never re-use an old cast).</li>
+<li>Give hair references: <i>"hair follows the head shape, short, not big hair"</i>.</li>
+<li>Describe the <b>pose</b> and <b>feeling</b> per line: <i>"inspector asleep at the wheel"</i>, <i>"grinning"</i>, <i>"pulls a face"</i>. Faces are drawn from emotions, so describe the emotion, not a face file.</li>
+<li>Ask for creative, slightly exaggerated movement and <b>no teleporting</b> (only in a timelapse).</li></ul>
+
+<h2>5. World &amp; objects</h2>
+<ul><li>Name every object you want in the scene; ask for <b>many objects</b> (a town needs shops, lamps, signs, parked cars).</li>
+<li>Ask for damage as real geometry: <i>"the road has real grooves cut into it, deep and uneven"</i>, <i>"guardrails bend"</i>, <i>"cars show damage"</i>.</li>
+<li>Give looks by reference: <i>"extend the background to match this reference: wheat fields, blue sky, clouds"</i>.</li>
+<li>Ask for interiors: <i>"when a door opens it has real depth and texture inside; brake and gas pedals in the footwell"</i>.</li></ul>
+
+<h2>6. Camera &amp; lighting</h2>
+<ul><li>Tie the camera to the words: <i>"on 'machine' the camera pushes in on the saw, shine, slight slow-mo"</i>.</li>
+<li>Say what you want <b>and how calm</b>: one smooth move per shot, no sudden jumps. If it moves too much, say so.</li>
+<li>Lighting: day/sunset/night, headlights, shadows of trees, "faces stay white at night".</li>
+<li>Use the <b>camera editor</b> (included) when you want exact angles: set keys on the words, save, re-render.</li></ul>
+
+<h2>7. Sound</h2>
+<ul><li>Ask for real sound effects on every visible action (saw, cars, crash, splash), never AI-generated sounds.</li>
+<li>Pick the background music with the <b>music picker</b> (included): watch the final video with each track and set the volume.</li></ul>
+
+<h2 class="pb">8. Feedback that works</h2>
+<p>Most of the quality comes from the feedback rounds. Review the storyboard stills like a director.</p>
+<ol><li><b>Point at the exact frame</b> (screenshot + timestamp) and say what is wrong: <i>"the chair is clipping through his head"</i>.</li>
+<li><b>Say what right looks like</b>, with a reference if you can: <i>"the sky should be like this — bluer, clouds with shading"</i>.</li>
+<li><b>Turn it into a rule</b>: <i>"grass should always render no matter how far"</i>, <i>"remember this for every video"</i>.</li>
+<li>Batch everything in one message, then ask it to <b>fix every other problem it sees too</b>.</li>
+<li>When something is perfect, say <b>"save that model"</b> / <b>"save that as a skill"</b> so it is reused.</li></ol>
+<div class="ex">fix this sign, something is wrong, and the character is still not holding the saw correctly, and there's something blocking the camera in this part.
+
+the cuts on the road should have real depth, and be inconsistent — a different shape per cut, not always in a straight line.
+
+scoot the car chairs more to the front, but make sure it doesn't clip through anything; if it does, remodel the part it clips through.</div>
+
+<h2>9. How I make Claude model objects</h2>
+<p>Every object is built from code, part by part. This is what gets realistic results instead of grey boxes.</p>
+<h3>The method</h3>
+<ol><li><b>Give a reference photo</b> (or ask Claude to look up real photos and the real dimensions).</li>
+<li><b>Ask for real parts</b>, not shapes: <i>"model a concrete saw like this: blade with guard, motor housing, rear handle with trigger, top loop handle, air filter cover, starter grip"</i>.</li>
+<li><b>Ask for inspection views</b>: front 3/4, rear 3/4, side, close-ups of wheels, underside, every moving part opened. Look at all of them before using the model.</li>
+<li><b>Ask for moving parts</b>: doors on hinges, spinning blade, grips the hands can hold.</li>
+<li><b>Name the materials</b>: car paint with clearcoat, leather with stitching, brushed metal, rubber, glass you can see through.</li>
+<li><b>Reject shortcuts</b>: no flat slabs, no perfect boxes, real wheels, nothing hollow, nothing clipping.</li>
+<li><b>Save the approved model</b> so every future video re-uses it.</li></ol>
+<h3>Techniques Claude uses (ask for them by name)</h3>
+<table><tr><th>Technique</th><th>Used for</th></tr>
+<tr><td>Parametric surfaces split by material</td><td>car bodies with lamps, glass and stripes from one surface</td></tr>
+<tr><td>Lathe profiles</td><td>tyres, rims, cones, thermos, buckets, knobs</td></tr>
+<tr><td>Rounded / bevelled extrusions</td><td>panels, signs, spokes, handles, seat cushions</td></tr>
+<tr><td>Tubes along curves</td><td>handles, hoses, rails, ladder racks</td></tr>
+<tr><td>Procedural textures + normal maps</td><td>asphalt, leather, paint orange-peel, rust, dirt</td></tr>
+<tr><td>Instancing</td><td>grass to the horizon, tread blocks, fence posts</td></tr>
+<tr><td>Real-time deformation</td><td>guardrail dents, crumpled cars, road grooves</td></tr></table>
+<div class="ex">make a model of this concrete saw. Real parts, real proportions, textures, grips for both hands, the blade spins. Give me inspection views from every side and close-ups before using it. No flat slabs, nothing clipping.
+
+model a new pickup the same way you modelled the police car: doors that open with thick trim panels, full interior visible from outside (seats, dash, pedals), real wheels, a bed with tie-downs.</div>
+
+<h2 class="pb">10. Templates</h2>
+<h3>New video</h3>
+<div class="ex">[attach voice, script, references]
+Make this video. Storyboard first: one still per beat, timed to the voice. Use new characters.
+
+Characters: [name/role] — [look]. [name/role] — [look].
+World: [place], [time of day], match [reference] for colours and scenery; many objects; [what can be damaged].
+
+on "[line 1]" — [what happens], camera [move], [transition]
+on "[line 2]" — ...
+...
+
+Must-haves: dust behind cars; doors with depth and interiors; faces white at night; calm smooth camera; real sfx.
+Check every frame before sending: not too zoomed in, nothing blocking the camera, good lighting.</div>
+<h3>Feedback round</h3>
+<div class="ex">[screenshots]
+1. [frame/time] — [what's wrong] → [what it should be]
+2. ...
+Turn these into rules for every future video, then fix every other problem you see too.</div>
+
+<h2>11. Checklist before you approve</h2>
+<ul><li>Every line of the voice has something on screen that matches it.</li>
+<li>Characters: feet planted, knees bend when sitting, hands really grip, no clipping, faces white at night.</li>
+<li>World: textures everywhere, grass to the horizon, no grey boxes, damage visible.</li>
+<li>Camera: nothing blocks the view, no snapping, push-ins land on what is being said.</li>
+<li>Sound: real effects on every action, music under the voice.</li></ul>
+<p class="small">Tip: keep a list of your rules. Every correction you make once becomes part of every future video.</p>
+</body></html>
